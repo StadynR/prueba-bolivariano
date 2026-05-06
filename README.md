@@ -51,7 +51,7 @@ flowchart TD
 | `*_agent.py` | `app/agents/` | Agentes especializados (1 por dominio) |
 | `retriever.py` | `app/rag/retriever.py` | Búsqueda semántica con score |
 | `vectorstore.py` | `app/rag/vectorstore.py` | Cliente ChromaDB, colecciones |
-| `llm_factory.py` | `app/llm_factory.py` | Factory agnóstica de LLM y embeddings |
+| `llm_factory.py` | `app/llm_factory.py` | Factory de LLM y embeddings |
 | `config.py` | `app/config.py` | Configuración desde variables de entorno |
 | `ingest.py` | `backend/ingest.py` | Ingesta de documentos en ChromaDB |
 
@@ -79,7 +79,7 @@ flowchart TD
 ## Requisitos previos
 
 - Python 3.11+
-- Una API key del proveedor LLM que vayas a usar (ver sección de configuración abajo)
+- Una API key de OpenAI
 
 ---
 
@@ -99,10 +99,9 @@ pip install -r requirements.txt
 
 # 4. Configurar variables de entorno
 cp .env.example .env
-# Editar .env: elegir proveedor y colocar la API key correspondiente (ver sección de configuración)
+# Editar .env: colocar la API key
 
 # 5. Ingestar documentos (ejecutar UNA SOLA VEZ o cuando cambien los docs)
-#    El venv ya está activo — se puede correr desde cualquier directorio
 python backend/ingest.py
 
 # 6. Iniciar el servidor (desde backend/, con el venv de la raíz activo)
@@ -126,7 +125,7 @@ El sistema usa OpenAI. Las variables relevantes en `.env`:
 | `LLM_MODEL` | Modelo de chat | `gpt-4o-mini` |
 | `EMBEDDING_MODEL` | Modelo de embeddings | `text-embedding-3-small` |
 
-**Costo estimado:** una consulta típica con `gpt-4o-mini` + `text-embedding-3-small` consume 800-2000 tokens (~$0.0003-0.001 USD). La ingesta inicial de los 3 documentos son ~5000 tokens de embedding (~$0.0001 USD, pago único).
+**Costo estimado:** una consulta típica con `gpt-4o-mini` + `text-embedding-3-small` consume 800-2000 tokens (aprox. 0.0003 - 0.001 USD). La ingesta inicial de los 3 documentos son aprox. 5000 tokens de embedding (aprox. 0.0001 USD, pago único).
 
 ---
 
@@ -191,28 +190,24 @@ prueba-bolivariano/          ← raíz del repositorio
 ## Decisiones técnicas y trade-offs
 
 ### LangGraph para orquestación
-**Por qué:** Permite definir el flujo como un grafo de estado explícito, con fan-out paralelo nativo (Send API), routing condicional tipado y trazabilidad de cada nodo. Es el estándar emergente para agentes IA en producción.
-**Trade-off:** Mayor complejidad inicial vs. una cadena LangChain simple. Justificado porque el fan-out paralelo y el routing condicional son requisitos del caso de uso.
+**Por qué:** Permite definir el flujo como un grafo de estado explícito, con paralelización nativa (Send API), routing condicional tipado y trazabilidad de cada nodo. Es el estándar emergente para agentes IA en producción.
+**Trade-off:** Mayor complejidad inicial comparado con una cadena LangChain simple. Justificado porque la paralelización y el routing condicional son requisitos del caso de uso.
 
 ### ChromaDB con colecciones separadas
 **Por qué:** Una colección por documento permite que cada agente acceda **únicamente a su dominio**, implementando el control de acceso documental a nivel de vectorstore. Si un usuario no tiene permiso para un documento, simplemente no se incluye su colección en la búsqueda.
-**Trade-off:** Más colecciones vs. filtrado por metadatos en una sola colección. La separación es más robusta y menos propensa a errores de filtrado.
+**Trade-off:** Más colecciones comparado a un filtrado por metadatos en una sola colección. La separación es más robusta y menos propensa a errores de filtrado.
 
 ### Clasificación de intención por LLM
 **Por qué:** Más robusto que keywords para consultas ambiguas o mixtas. El LLM entiende semántica, no solo palabras clave.
-**Trade-off:** Costo adicional de tokens vs. clasificador de keywords gratuito. Para un banco, la robustez justifica el costo mínimo.
+**Trade-off:** Costo adicional de tokens vs. clasificador de keywords gratuito. Para un banco, la robustez justifica el costo mínimo, más si se usan modelos ligeros.
 
 ### Control de alucinaciones (RAG + umbral + guardrail en LLM)
 Doble capa:
 1. **Umbral de relevancia en ChromaDB** (`RAG_RELEVANCE_THRESHOLD`): si ningún chunk supera el umbral, el agente no llama al LLM y activa `no_info_flag` directamente.
-2. **Instrucción explícita en el prompt**: se le indica al LLM que si los fragmentos no son suficientes, responda con la frase estándar — la cual el agente detecta para activar el flag.
+2. **Instrucción explícita en el prompt**: se le indica al LLM que si los fragmentos no son suficientes, responda con la frase estándar, la cual el agente detecta para activar el flag.
 
 ### `llm_factory.py`: clientes OpenAI centralizados
 **Por qué:** `get_llm()` y `get_embeddings()` son singletons con `@lru_cache` que el resto de la app importa directamente. Si en el futuro se cambia de modelo o proveedor, el cambio está en un solo lugar.
-**Trade-off:** Indirección mínima vs. instanciar `ChatOpenAI` directamente en cada módulo. Justificado para facilitar tests con mocks y futuros cambios de modelo.
-
-### `gpt-4o-mini` como modelo base
-Balance óptimo entre costo, velocidad y calidad para un prototipo. Intercambiable por `gpt-4o` u otro modelo OpenAI cambiando `LLM_MODEL` en `.env`.
 
 ---
 
@@ -265,7 +260,7 @@ El sistema registra los siguientes campos (nunca el contenido de preguntas o res
 
 | Métrica | Herramienta sugerida |
 |---|---|
-| Latencia por consulta y por agente | Prometheus + Grafana |
+| Latencia por consulta y por agente | Grafana |
 | Tokens consumidos y costo estimado | LangSmith o logging propio |
 | Tasa de respuestas con `no_info_flag` | Dashboard interno |
 | Errores del LLM (timeouts, rate limits) | Alertas en CloudWatch / Datadog |
@@ -282,5 +277,3 @@ El sistema registra los siguientes campos (nunca el contenido de preguntas o res
 | Prompt injection | Input sanitizado por Pydantic; agentes no ejecutan acciones, solo generan texto |
 | Exposición de API key | Solo en variables de entorno; `.env` en `.gitignore` |
 | Costo por uso intensivo | `gpt-4o-mini` minimiza costo; monitoreo de tokens propuesto |
-| ChromaDB local en MVP | Para producción: migrar a ChromaDB Cloud o pgvector en RDS |
-| Sin autenticación en MVP | Propuesta de auth JWT documentada arriba; fuera del scope del prototipo |
