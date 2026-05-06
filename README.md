@@ -6,40 +6,38 @@ Prototipo de mesa de ayuda con agentes especializados de IA para el área de Des
 
 ## Arquitectura
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Usuario (Browser)                 │
-│              frontend/index.html                     │
-└────────────────────┬────────────────────────────────┘
-                     │ POST /api/query
-┌────────────────────▼────────────────────────────────┐
-│               FastAPI  (backend/app/main.py)         │
-│               GET /api/health                        │
-│               POST /api/query                        │
-└────────────────────┬────────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────────┐
-│         Orquestador LangGraph (graph.py)             │
-│                                                      │
-│  classify_intent ──► (condicional)                   │
-│       ├── run_agent_node (arquitectura) ──┐          │
-│       ├── run_agent_node (seguridad)    ──┼─► consolidate ──► END
-│       ├── run_agent_node (produccion)  ──┘          │
-│       └── handle_unknown                  ──► END    │
-└────────────────────┬────────────────────────────────┘
-                     │
-        ┌────────────┼────────────┐
-        ▼            ▼            ▼
-  ┌──────────┐ ┌──────────┐ ┌──────────┐
-  │Agente    │ │Agente    │ │Agente    │
-  │Arquitec. │ │Seguridad │ │Producción│
-  └────┬─────┘ └────┬─────┘ └────┬─────┘
-       │             │             │
-       ▼             ▼             ▼
-  ┌─────────────────────────────────────┐
-  │   ChromaDB (colecciones separadas)  │
-  │   arquitectura | seguridad | prod   │
-  └─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    U(["👤 Usuario\nfrontend/index.html"])
+    API["⚡ FastAPI\nPOST /api/query\nGET /api/health"]
+    CI["🧠 classify_intent\n(LLM → JSON de intents)"]
+    HU["⚠️ handle_unknown\n(fuera de alcance)"]
+    AA["🏗️ Agente\nArquitectura"]
+    AS["🔒 Agente\nSeguridad"]
+    AP["🚀 Agente\nProducción"]
+    CO["📝 consolidate\n(LLM unifica respuestas)"]
+    DB[("🗄️ ChromaDB\narquitectura · seguridad · produccion")]
+
+    U -->|"POST /api/query"| API
+    API --> CI
+    CI -->|unknown| HU
+    CI -->|"fan-out paralelo\n(Send API)"| AA & AS & AP
+    AA & AS & AP -->|"búsqueda semántica"| DB
+    DB -->|chunks + score| AA & AS & AP
+    AA & AS & AP -->|AgentResponse| CO
+    CO -->|answer + sources + warnings| API
+    API -->|QueryResponse| U
+    HU -->|respuesta estándar| API
+
+    style U fill:#e8f0fe,stroke:#4285f4
+    style API fill:#e6f4ea,stroke:#34a853
+    style CI fill:#fce8e6,stroke:#ea4335
+    style HU fill:#fff8e1,stroke:#fbbc04
+    style AA fill:#f3e8fd,stroke:#9c27b0
+    style AS fill:#f3e8fd,stroke:#9c27b0
+    style AP fill:#f3e8fd,stroke:#9c27b0
+    style CO fill:#e8f0fe,stroke:#4285f4
+    style DB fill:#fafafa,stroke:#757575
 ```
 
 ### Componentes principales
