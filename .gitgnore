@@ -1,0 +1,10 @@
+# Archivos de detalles de la prueba técnica
+
+01_estandares_arquitectura_microservicios.txt
+02_lineamientos_seguridad_apis.txt
+03_checklist_paso_produccion.txt
+Caso_Practico_IA.pdf
+
+.github/
+.git/
+.env/
