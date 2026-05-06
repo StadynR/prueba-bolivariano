@@ -1,10 +1,26 @@
 # Archivos de detalles de la prueba técnica
-
 01_estandares_arquitectura_microservicios.txt
 02_lineamientos_seguridad_apis.txt
 03_checklist_paso_produccion.txt
 Caso_Practico_IA.pdf
 
+# Git / IDE
 .github/
 .git/
-.env/
+.DS_Store
+
+# Entorno virtual y secretos
+.venv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+
+# ChromaDB (datos generados por ingest.py)
+chroma_data/
+
+# Pytest
+.pytest_cache/
