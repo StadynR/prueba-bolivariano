@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mesa de Ayuda IA · Desarrollo TI</title>
+  <style>
+    :root {
+      --primary: #0033a0;
+      --primary-light: #1a4fc4;
+      --accent: #f5a623;
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --border: #dce3f0;
+      --text: #1a1a2e;
+      --text-muted: #5a6a8a;
+      --success: #1e7e34;
+      --warning: #856404;
+      --warning-bg: #fff3cd;
+      --error: #721c24;
+      --error-bg: #f8d7da;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0,51,160,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    header .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    header .subtitle {
+      font-size: 0.85rem;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 36px auto;
+      padding: 0 20px 60px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .input-section h2 {
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 0.97rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 110px;
+      color: var(--text);
+      background: #fafbff;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--primary-light);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 11px 28px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.1s;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1.5px solid var(--border);
+      padding: 10px 18px;
+    }
+
+    .btn-clear:hover:not(:disabled) {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Results */
+    #results { margin-top: 28px; display: none; }
+
+    .result-card { margin-top: 18px; }
+
+    .result-card:first-child { margin-top: 0; }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .answer-text {
+      line-height: 1.7;
+      font-size: 0.97rem;
+    }
+    .answer-text h1, .answer-text h2, .answer-text h3, .answer-text h4 {
+      margin-top: 1.1em;
+      margin-bottom: 0.3em;
+      color: var(--primary);
+    }
+    .answer-text ul, .answer-text ol {
+      padding-left: 1.4em;
+      margin: 0.4em 0;
+    }
+    .answer-text li { margin-bottom: 0.25em; }
+    .answer-text p { margin: 0.5em 0; }
+    .answer-text strong { color: var(--text); }
+    .answer-text code {
+      background: #f1f3f4;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-arch { background: #e8f0fe; color: #1a4fc4; }
+    .badge-sec  { background: #fce8e6; color: #c5221f; }
+    .badge-prod { background: #e6f4ea; color: #1e7e34; }
+    .badge-default { background: #f1f3f4; color: #5a6a8a; }
+
+    .sources-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .source-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 0.83rem;
+    }
+
+    .source-item .doc-id {
+      font-weight: 700;
+      color: var(--primary);
+      margin-right: 6px;
+    }
+
+    .source-item .section {
+      color: var(--text);
+    }
+
+    .source-item .file {
+      color: var(--text-muted);
+      font-size: 0.77rem;
+      margin-top: 2px;
+    }
+
+    .score-bar {
+      display: inline-block;
+      width: 36px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-left: 6px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--primary);
+    }
+
+    .warnings-box {
+      background: var(--warning-bg);
+      border: 1px solid #ffc107;
+      border-radius: 7px;
+      padding: 12px 16px;
+    }
+
+    .warnings-box ul {
+      list-style: none;
+      font-size: 0.85rem;
+      color: var(--warning);
+    }
+
+    .warnings-box ul li::before { content: "⚠ "; }
+
+    .error-box {
+      background: var(--error-bg);
+      border: 1px solid #f5c6cb;
+      border-radius: 7px;
+      padding: 14px 16px;
+      color: var(--error);
+      font-size: 0.9rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    .meta-row {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Ejemplos */
+    .examples {
+      margin-top: 22px;
+    }
+
+    .examples h3 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .example-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 6px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--text);
+      cursor: pointer;
+      background: var(--surface);
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .chip:hover {
+      border-color: var(--primary);
+      background: #e8f0fe;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Mesa de Ayuda IA · Desarrollo TI</div>
+    <div class="subtitle">Agentes especializados con base documental del banco</div>
+  </div>
+</header>
+
+<main>
+  <div class="card input-section">
+    <h2>¿En qué te puedo ayudar?</h2>
+    <textarea
+      id="question"
+      placeholder="Ej: ¿Qué debe cumplir un microservicio antes de exponerse como API interna?..."
+      maxlength="1000"
+    ></textarea>
+
+    <div class="actions">
+      <button id="btn-submit" onclick="submitQuery()">
+        Consultar
+      </button>
+      <button class="btn-clear" onclick="clearAll()">Limpiar</button>
+      <span class="hint" id="char-hint">0 / 1000</span>
+    </div>
+
+    <div class="examples">
+      <h3>Ejemplos de consulta</h3>
+      <div class="example-chips">
+        <span class="chip" onclick="fillExample(this)">¿Qué debe cumplir un microservicio antes de exponerse como API interna?</span>
+        <span class="chip" onclick="fillExample(this)">¿Puedo registrar el número de identificación de un cliente en los logs?</span>
+        <span class="chip" onclick="fillExample(this)">¿Qué evidencias necesito para pasar un microservicio a producción?</span>
+        <span class="chip" onclick="fillExample(this)">Necesito publicar una nueva API interna que consume datos sensibles. ¿Qué controles debo cumplir?</span>
+        <span class="chip" onclick="fillExample(this)">¿Cuál es el mejor restaurante de sushi en la ciudad?</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<script>
+  const textarea = document.getElementById('question');
+  const charHint = document.getElementById('char-hint');
+
+  textarea.addEventListener('input', () => {
+    charHint.textContent = `${textarea.value.length} / 1000`;
+  });
+
+  textarea.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitQuery();
+  });
+
+  function fillExample(el) {
+    textarea.value = el.textContent.trim();
+    charHint.textContent = `${textarea.value.length} / 1000`;
+    textarea.focus();
+  }
+
+  function clearAll() {
+    textarea.value = '';
+    charHint.textContent = '0 / 1000';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').innerHTML = '';
+  }
+
+  function agentBadgeClass(name) {
+    const n = name.toLowerCase();
+    if (n.includes('arquitectura')) return 'badge-arch';
+    if (n.includes('seguridad'))    return 'badge-sec';
+    if (n.includes('producción') || n.includes('produccion')) return 'badge-prod';
+    return 'badge-default';
+  }
+
+  function agentIcon(name) {
+    const n = name.toLowerCase();
+    if (n.includes('arquitectura')) return '🏗';
+    if (n.includes('seguridad'))    return '🔒';
+    if (n.includes('producción') || n.includes('produccion')) return '🚀';
+    return '🤖';
+  }
+
+  function renderResults(data) {
+    const container = document.getElementById('results');
+    container.style.display = 'block';
+
+    let html = `<div class="card">`;
+
+    // Respuesta principal
+    html += `<div class="result-card">
+      <div class="section-label">Respuesta</div>
+      <div class="answer-text">${marked.parse(data.answer)}</div>
+    </div>`;
+
+    // Agentes participantes
+    if (data.agents_invoked && data.agents_invoked.length > 0) {
+      html += `<hr class="divider">
+      <div class="result-card">
+        <div class="section-label">Agentes participantes</div>
+        <div class="badges">`;
+      data.agents_invoked.forEach(agent => {
+        html += `<span class="badge ${agentBadgeClass(agent)}">${agentIcon(agent)} ${escapeHtml(agent)}</span>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // Fuentes
+    if (data.sources && data.sources.length > 0) {
+      html += `<hr class="divider">
+      <div class="result-card">
+        <div class="section-label">Fuentes utilizadas</div>
+        <ul class="sources-list">`;
+      data.sources.forEach(s => {
+        const pct = Math.round(s.score * 100);
+        html += `<li class="source-item">
+          <span class="doc-id">${escapeHtml(s.doc_id)}</span>
+          <span class="section">${escapeHtml(s.section_title)}</span>
+          <span class="score-bar" title="Relevancia: ${pct}%">
+            <span class="score-bar-fill" style="width:${pct}%"></span>
+          </span>
+          <div class="file">${escapeHtml(s.source_file)}</div>
+        </li>`;
+      });
+      html += `</ul></div>`;
+    }
+
+    // Advertencias
+    if (data.warnings && data.warnings.length > 0) {
+      html += `<hr class="divider">
+      <div class="result-card">
+        <div class="warnings-box">
+          <ul>`;
+      data.warnings.forEach(w => {
+        html += `<li>${escapeHtml(w)}</li>`;
+      });
+      html += `</ul></div></div>`;
+    }
+
+    // Meta
+    html += `<hr class="divider">
+    <div class="meta-row">
+      <span>ID: ${escapeHtml(data.query_id)}</span>
+    </div>`;
+
+    html += `</div>`;
+    container.innerHTML = html;
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderError(msg) {
+    const container = document.getElementById('results');
+    container.style.display = 'block';
+    container.innerHTML = `<div class="card"><div class="error-box">⚠ ${escapeHtml(msg)}</div></div>`;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  async function submitQuery() {
+    const question = textarea.value.trim();
+    if (!question) {
+      textarea.focus();
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Consultando...';
+
+    try {
+      const response = await fetch('/api/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!response.ok) {
+        let errMsg = `Error ${response.status}`;
+        try {
+          const errData = await response.json();
+          errMsg = errData.detail || errMsg;
+        } catch (_) {}
+        renderError(errMsg);
+        return;
+      }
+
+      const data = await response.json();
+      renderResults(data);
+
+    } catch (err) {
+      renderError('No se pudo conectar con el servidor. Verifique que la aplicación esté en ejecución.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Consultar';
+    }
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked@13/marked.min.js"></script>
+</body>
+</html>
