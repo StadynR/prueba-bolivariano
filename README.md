@@ -211,21 +211,6 @@ Doble capa:
 
 ---
 
-## Control de acceso documental (propuesta)
-
-La arquitectura actual ya está preparada para agregar permisos por documento:
-
-1. Cada colección ChromaDB corresponde a un documento con su nivel de clasificación.
-2. Al recibir una consulta, se filtra `AGENT_REGISTRY` según el perfil del usuario autenticado.
-3. Solo se invocan agentes cuya colección esté autorizada para ese perfil.
-
-Implementación futura sugerida:
-- Agregar autenticación JWT en el endpoint `/api/query`.
-- Definir un mapa `{rol: [colecciones_permitidas]}` en configuración.
-- Filtrar `AGENT_REGISTRY` en `route_after_classify` según el rol del token.
-
----
-
 ## Extensibilidad
 
 ### Cómo agregar un nuevo agente
@@ -260,10 +245,10 @@ El sistema registra los siguientes campos (nunca el contenido de preguntas o res
 
 | Métrica | Herramienta sugerida |
 |---|---|
-| Latencia por consulta y por agente | Grafana |
+| Latencia por consulta y por agente, tasa de errores | Prometheus + Grafana |
 | Tokens consumidos y costo estimado | LangSmith o logging propio |
 | Tasa de respuestas con `no_info_flag` | Dashboard interno |
-| Errores del LLM (timeouts, rate limits) | Alertas en CloudWatch / Datadog |
+| Errores del LLM (timeouts, rate limits) | Sistema de alertas |
 | Feedback de usuarios (útil / no útil) | Endpoint `POST /api/feedback` + tabla BD |
 | Consultas fuera de alcance (unknown) | Análisis semanal para ampliar base documental |
 
