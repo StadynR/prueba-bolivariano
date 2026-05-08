@@ -29,15 +29,15 @@ flowchart TD
     API -->|QueryResponse| U
     HU -->|respuesta estándar| API
 
-    style U fill:#e8f0fe,stroke:#4285f4
-    style API fill:#e6f4ea,stroke:#34a853
-    style CI fill:#fce8e6,stroke:#ea4335
-    style HU fill:#fff8e1,stroke:#fbbc04
-    style AA fill:#f3e8fd,stroke:#9c27b0
-    style AS fill:#f3e8fd,stroke:#9c27b0
-    style AP fill:#f3e8fd,stroke:#9c27b0
-    style CO fill:#e8f0fe,stroke:#4285f4
-    style DB fill:#fafafa,stroke:#757575
+    style U fill:#2563eb,stroke:#1d4ed8,color:#fff
+    style API fill:#16a34a,stroke:#15803d,color:#fff
+    style CI fill:#dc2626,stroke:#b91c1c,color:#fff
+    style HU fill:#d97706,stroke:#b45309,color:#fff
+    style AA fill:#7c3aed,stroke:#6d28d9,color:#fff
+    style AS fill:#7c3aed,stroke:#6d28d9,color:#fff
+    style AP fill:#7c3aed,stroke:#6d28d9,color:#fff
+    style CO fill:#2563eb,stroke:#1d4ed8,color:#fff
+    style DB fill:#475569,stroke:#334155,color:#fff
 ```
 
 ### Componentes principales
