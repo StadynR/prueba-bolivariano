@@ -182,7 +182,6 @@ prueba-bolivariano/          ← raíz del repositorio
 │   └── pytest.ini
 ├── frontend/
 │   └── index.html
-└── .venv/                   ← entorno virtual (no versionado)
 ```
 
 ---
