@@ -248,7 +248,7 @@ El sistema registra los siguientes campos (nunca el contenido de preguntas o res
 | Tokens consumidos y costo estimado | LangSmith o logging propio |
 | Tasa de respuestas con `no_info_flag` | Dashboard interno |
 | Errores del LLM (timeouts, rate limits) | Sistema de alertas |
-| Feedback de usuarios (útil / no útil) | Endpoint `POST /api/feedback` + tabla BD |
+| Feedback de usuarios (útil / no útil) | Endpoint `POST /api/feedback` |
 | Consultas fuera de alcance (unknown) | Análisis semanal para ampliar base documental |
 
 ---
